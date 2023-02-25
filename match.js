@@ -4,12 +4,12 @@ const fs = require("fs");
 // let matchLink = "https://www.espncricinfo.com/series/ipl-2020-21-1210595/delhi-capitals-vs-mumbai-indians-final-1237181/full-scorecard";
 
 let leaderboard = [] ;
-let countOfRequestSent = 0 ;
+let countOfRequestSent = 0 ;  //[#1]
 
 
 function getMatchDetails(matchLink){
     console.log("Sending Request " , countOfRequestSent);
-    countOfRequestSent++;
+    countOfRequestSent++; // to check ki kab hmare pass pura data aa jaayega print karne k liye
 
     //Async call
     request(matchLink , function(error , response , data){
@@ -50,31 +50,35 @@ function processData(html){
                 let strikeRate = myDocument(allTds[7]).text().trim();
                 // console.log(`Batsman = ${batsmanName} Runs = ${runs} Balls = ${balls} Fours = ${fours} Sixes = ${sixes} StrikeRate = ${strikeRate}`);
                 // processDetails(teamName , batsmanName , runs , balls , fours , sixes , strikeRate);
-                processLeaderBoard(teamName , batsmanName , runs , balls , fours , sixes);
+                processLeaderBoard(teamName , batsmanName , runs , balls , fours , sixes);// leaderboard ke liye alag se function create kar liya
             }
         }
     }
     // console.log("############################################");
 }
 function processLeaderBoard(teamName , batsmanName , runs , balls , fours , sixes ){
-    runs = Number(runs);
+    runs = Number(runs); // Number => ye string ki value ko numbers me convert kar deta hi
     balls = Number(balls);
     fours = Number(fours);
     sixes = Number(sixes);
 
     for(let i=0;i<leaderboard.length ; i++){
-        let batsmanObject = leaderboard[i];
-        
-        if(batsmanObject.Team == teamName && batsmanObject.Batsman == batsmanName){
+        let batsmanObject = leaderboard[i];// isse ek ek karke leaderboard ki har ek entry pe jaayega
+
+        if(batsmanObject.Team == teamName && batsmanObject.Batsman == batsmanName){//aur jaake check krega ki kahi jo batsman abhi aaya hai iss batsman ka object yani ye batsman pahle se exist to nhi karta 
             batsmanObject.Runs = batsmanObject.Runs + runs;
             batsmanObject.Balls += balls;
             batsmanObject.Fours += fours;
             batsmanObject.Sixes += sixes;
-            return;
+            return;  // iski wajah se niche ki lines nhi chlegi
         }
     }
 
-    let batsmanObject = {
+    // agr batsman exist nhi karta hoga to leaderboard ki length 0 hogi
+    // aur hum for loop me nhi ghusenge aur sidha ye code chlega
+    // aur jab leaderboard ki length hogi to wo batman ki checking krega 
+    // aur agr batsman mil gya to wahi to return kr jaayenge aur agr nhi mila to fir us batsman ke liye bhi obj bnega
+    let batsmanObject = { 
         Team : teamName ,
         Batsman : batsmanName ,
         Runs : runs ,
@@ -87,3 +91,20 @@ function processLeaderBoard(teamName , batsmanName , runs , balls , fours , sixe
 
 
 module.exports = getMatchDetails;
+
+
+
+/*
+#1. Hume ye countOfRequestSent wale variable ki bhsad kyu machai?
+
+Dekho humne leaderboard ka array bna to liya usme data daalne ke liye code bhi likh diye 
+lekin hume ab us leaderboard ko console bhi to krwana hai
+lekin isme problem ye thi ki hume pta kaise chlega ki leaderboard full ho chuka means ki saare matches ka data aake process ho chuka hai
+to iske liye humne countOfRequestSent naam ka variable bnaya 
+aur jaise hi getMatchDetails ko call lgti hai hum is variable ko increase kr dete hai 
+aur jab request joki ek async fxn hai uske pass data aa jaata hai aur wo fir apne callback fxn ko call lgata hai 
+tab hume countOfRequestSent variable ko decrease kr diya
+ab hoga ye ki jaise hi getMatchDetails ko call lgti jaayegi countOfRequestSent increase hota jaayega 
+aur jaise hi data ana suru hoga countOfRequestSent decrease hota jaayega
+to jab countOfRequestSent 0 ho jaayega tab hume pta chal jaayega ki saara data aa chuka hai aur ab hum leaderboard ko console krwa skte hai
+*/
